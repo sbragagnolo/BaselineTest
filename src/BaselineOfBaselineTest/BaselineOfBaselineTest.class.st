@@ -8,7 +8,7 @@ Class {
 BaselineOfBaselineTest >> baseline: spec [
 	<baseline>
 	self taskit: spec.
-	spec package: #BaselineTest with: [ spec requires: #(TaskIt) ]
+	spec package: #BaselineTest with: [ spec requires: #(TaskItShell) ]
 ]
 
 { #category : #baselines }
