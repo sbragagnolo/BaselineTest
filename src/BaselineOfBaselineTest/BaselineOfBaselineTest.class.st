@@ -15,5 +15,5 @@ BaselineOfBaselineTest >> baseline: spec [
 BaselineOfBaselineTest >> taskit: spec [
 	spec
 		baseline: 'TaskItShell'
-		with: [ spec repository: 'git@github.com:sbragagnolo/taskit.git' ]
+		with: [ spec repository: 'github://sbragagnolo/taskit' ]
 ]
