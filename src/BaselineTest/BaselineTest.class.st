@@ -6,24 +6,15 @@ Class {
 
 { #category : #tests }
 BaselineTest >> loadAndTestGroup: group [
-	| suits project result |
+	|  project  |
 	project := (self package name copyReplaceAll: #BaselineOf with: '')
 		asString.
 	Metacello new
 		baseline: project;
 		repository: self packageRepositoryURL;
 		load: group asSymbol.
-	suits := (Smalltalk packages
-		select: [ :package | package name beginsWith: project ])
-		flatCollect: [ :package | 
-			package classes
-				select:
-					[ :class | (class inheritsFrom: TestCase) and: [ class isAbstract not ] ]
-				thenCollect: [ :testCase | testCase buildSuiteFromSelectors ] ].
-	result := (TestSuite named: group , '-Testing')
-		addTests: suits;
-		run.
-	^ self transformResultIntoMap: result
+	
+	^ self testGroup: group forProject: project.
 ]
 
 { #category : #tests }
@@ -78,6 +69,22 @@ BaselineTest >> testAllGroups [
 	(results allSatisfy: #isNotNil)
 		ifTrue: [ ^ results ].
 	self error: 'Unexpected finalization'
+]
+
+{ #category : #tests }
+BaselineTest >> testGroup: group forProject: project [
+	| result suits |
+	suits := (Smalltalk packages
+		select: [ :package | package name beginsWith: project ])
+		flatCollect: [ :package | 
+			package classes
+				select:
+					[ :class | (class inheritsFrom: TestCase) and: [ class isAbstract not ] ]
+				thenCollect: [ :testCase | testCase buildSuiteFromSelectors ] ].
+	result := (TestSuite named: group , '-Testing')
+		addTests: suits;
+		run.
+	^ self transformResultIntoMap: result
 ]
 
 { #category : #tests }
