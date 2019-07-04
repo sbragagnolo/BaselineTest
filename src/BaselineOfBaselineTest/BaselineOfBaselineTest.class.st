@@ -7,13 +7,13 @@ Class {
 { #category : #baselines }
 BaselineOfBaselineTest >> baseline: spec [
 	<baseline>
-	self taskit: spec.
-	spec package: #BaselineTest with: [ spec requires: #(TaskItShell) ]
+	self forkit: spec.
+	spec package: #BaselineTest with: [ spec requires: #(ForkIt) ]
 ]
 
 { #category : #baselines }
-BaselineOfBaselineTest >> taskit: spec [
+BaselineOfBaselineTest >> forkit: spec [
 	spec
-		baseline: 'TaskItShell'
-		with: [ spec repository: 'github://sbragagnolo/taskit' ]
+		baseline: 'ForkIt'
+		with: [ spec repository: 'github://sbragagnolo/taskit:ForkIt' ]
 ]
