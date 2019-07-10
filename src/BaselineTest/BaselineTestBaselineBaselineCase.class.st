@@ -65,11 +65,12 @@ BaselineTestBaselineBaselineCase >> testSomething [
 BaselineTestBaselineBaselineCase >> testTaskitFutureTestsArePassing [
 	| testExecution |
 	testExecution := self
-		remoteExecuteTestsOnPackageNamed: 'TaskIt-Tests'.
+		remoteExecuteTestsOnPackageNamed: 'TaskIt-Tests'
+		timeout: 5 minutes.
 	self
 		assert: (testExecution at: #errors) isEmpty
 		description: 'There are errors on the execution of tests'.
 	self
 		assert: (testExecution at: #failures) isEmpty
-		description: 'There are failures on the execution of tests'
+		description: 'There are failures on the execution of tests'.
 ]

@@ -6,20 +6,17 @@ Class {
 		'project',
 		'pool'
 	],
-	#classInstVars : [
-		'pool'
-	],
 	#category : #BaselineTest
 }
-
-{ #category : #accessing }
-BaselineTestCase class >> pool [
-	^ pool ifNil: [ pool := TKTArchetypeAwarePool createDefault ]
-]
 
 { #category : #'building suites' }
 BaselineTestCase class >> projectPerGroup [
 	^ self subclassResponsibility
+]
+
+{ #category : #accessing }
+BaselineTestCase class >> resources [
+	^ Array with: BaselineTestPoolResource 
 ]
 
 { #category : #'building suites' }
@@ -70,7 +67,7 @@ BaselineTestCase >> executeBlockAsArchetypedTask: aBlock [
 
 { #category : #accessing }
 BaselineTestCase >> initializePool [
-	pool := self class pool.
+	pool := BaselineTestPoolResource current pool.
 	self amountBackendsToUse - (pool backendsFor: archetype) size
 		timesRepeat: [ pool spawnNewBackendFor: archetype ]
 ]
