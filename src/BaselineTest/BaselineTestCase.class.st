@@ -147,6 +147,11 @@ BaselineTestCase >> remoteVmVersion [
 ]
 
 { #category : #accessing }
+BaselineTestCase >> runCaseManaged [
+	^ self runCase
+]
+
+{ #category : #accessing }
 BaselineTestCase >> setUp [
 	super setUp.
 	self initializePool.
