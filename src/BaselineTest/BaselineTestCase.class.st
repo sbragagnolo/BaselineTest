@@ -22,7 +22,7 @@ BaselineTestCase class >> resources [
 { #category : #'building suites' }
 BaselineTestCase class >> testParameters [
 	^ ParametrizedTestMatrix new
-		forSelector: #archetype addOptions: {TKTArchetype pharo80};
+		forSelector: #archetype addOptions: {TKTArchetype pharo80 . TKTArchetype pharo70};
 		forSelector: #project addOptions: self projectPerGroup;
 		yourself
 ]
@@ -118,6 +118,16 @@ BaselineTestCase >> remoteAssert: aBlock timeout: aTimeout [
 		assert:
 			((self executeBlockAsArchetypedTask: aBlock)
 				synchronizeTimeout: aTimeout)
+]
+
+{ #category : #accessing }
+BaselineTestCase >> remoteExecuteTestsClassNamed: aClassName timeout: aTimeout [
+	^ (self
+		executeBlockAsArchetypedTask:
+			(self class
+				evaluate:
+					('[ BaselineTest new testClass: ''{1}'' asClass ]'
+						format: {aClassName}))) synchronizeTimeout: aTimeout
 ]
 
 { #category : #accessing }

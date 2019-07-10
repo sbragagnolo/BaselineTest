@@ -39,7 +39,8 @@ BaselineTestBaselineBaselineCase >> testRemoteBackendLoadedBaselinePackage [
 
 { #category : #accessing }
 BaselineTestBaselineBaselineCase >> testSomething [
-
+	true
+		ifTrue: [ ^ self skip ].
 	self
 		remoteAssert: [ " code to execute in the image " ]
 		timeout: 20 seconds.
@@ -63,6 +64,20 @@ BaselineTestBaselineBaselineCase >> testSomething [
 
 { #category : #accessing }
 BaselineTestBaselineBaselineCase >> testTaskitFutureTestsArePassing [
+	| testExecution |
+	testExecution := self
+		remoteExecuteTestsClassNamed: #TKTFutureTests
+		timeout: 5 minutes.
+	self
+		assert: (testExecution at: #errors) isEmpty
+		description: 'There are errors on the execution of tests'.
+	self
+		assert: (testExecution at: #failures) isEmpty
+		description: 'There are failures on the execution of tests'.
+]
+
+{ #category : #accessing }
+BaselineTestBaselineBaselineCase >> testTaskitTestsArePassing [
 	| testExecution |
 	testExecution := self
 		remoteExecuteTestsOnPackageNamed: 'TaskIt-Tests'

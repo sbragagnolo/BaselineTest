@@ -72,6 +72,14 @@ BaselineTest >> testAllGroups [
 ]
 
 { #category : #tests }
+BaselineTest >> testClass: aClass [
+	self
+		assert: (aClass inheritsFrom: TestCase)
+		description: aClass name , ' does not inherits from TestCase! '.
+	^ self transformResultIntoMap: aClass buildSuiteFromSelectors run
+]
+
+{ #category : #tests }
 BaselineTest >> testGroup: group forProject: project [
 	| result suits |
 	suits := (Smalltalk packages

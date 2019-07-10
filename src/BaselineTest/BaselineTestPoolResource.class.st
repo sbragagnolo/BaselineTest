@@ -20,5 +20,6 @@ BaselineTestPoolResource >> setUp [
 
 { #category : #accessing }
 BaselineTestPoolResource >> tearDown [
-	pool stopAndDelete. 
+	'tearing down' logCr.
+	pool stopAndDelete
 ]
