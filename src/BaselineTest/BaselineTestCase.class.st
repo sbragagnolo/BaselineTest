@@ -174,8 +174,8 @@ BaselineTestCase >> runCaseManaged [
 { #category : #accessing }
 BaselineTestCase >> setUp [
 	super setUp.
-	self initializePool.
-	archetype := archetype + project
+	archetype := archetype + project.
+	self initializePool
 ]
 
 { #category : #accessing }
