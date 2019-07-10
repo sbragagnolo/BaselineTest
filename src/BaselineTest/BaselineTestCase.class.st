@@ -25,11 +25,7 @@ BaselineTestCase class >> projectPerGroup [
 { #category : #'building suites' }
 BaselineTestCase class >> testParameters [
 	^ ParametrizedTestMatrix new
-		forSelector: #archetype
-			addOptions:
-			{TKTArchetype pharo61.
-			TKTArchetype pharo70.
-			TKTArchetype pharo80};
+		forSelector: #archetype addOptions: {TKTArchetype pharo80};
 		forSelector: #project addOptions: self projectPerGroup;
 		yourself
 ]
