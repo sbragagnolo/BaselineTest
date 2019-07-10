@@ -133,8 +133,11 @@ BaselineTestCase >> remoteExecuteTestsOnPackageNamed: aPackageName [
 { #category : #accessing }
 BaselineTestCase >> remoteExecuteTestsOnPackageNamed: aPackageName timeout: aTimeout [
 	^ (self
-		executeBlockAsArchetypedTask: [ BaselineTest new testPackageNameStartingWith: aPackageName ])
-		synchronizeTimeout: aTimeout
+		executeBlockAsArchetypedTask:
+			(self class
+				evaluate:
+					('[ BaselineTest new testPackageNameStartingWith: ''{1}'' ]'
+						format: {aPackageName}))) synchronizeTimeout: aTimeout
 ]
 
 { #category : #accessing }
