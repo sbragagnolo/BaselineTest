@@ -124,6 +124,20 @@ BaselineTestCase >> remoteAssert: aBlock timeout: aTimeout [
 ]
 
 { #category : #accessing }
+BaselineTestCase >> remoteExecuteTestsOnPackageNamed: aPackageName [
+	^ self
+		remoteExecuteTestsOnPackageNamed: aPackageName
+		timeout: self defaultTimeout
+]
+
+{ #category : #accessing }
+BaselineTestCase >> remoteExecuteTestsOnPackageNamed: aPackageName timeout: aTimeout [
+	^ (self
+		executeBlockAsArchetypedTask: [ BaselineTest new testPackageNameStartingWith: aPackageName ])
+		synchronizeTimeout: aTimeout
+]
+
+{ #category : #accessing }
 BaselineTestCase >> remoteImageVersion [
 	^ (self executeBlockAsArchetypedTask: [ Smalltalk version ])
 		synchronizeTimeout: self defaultTimeout

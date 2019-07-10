@@ -88,6 +88,22 @@ BaselineTest >> testGroup: group forProject: project [
 ]
 
 { #category : #tests }
+BaselineTest >> testPackageNameStartingWith: aName [ 
+	| result suits |
+	suits := (Smalltalk packages
+		select: [ :package | package name beginsWith: aName ])
+		flatCollect: [ :package | 
+			package classes
+				select:
+					[ :class | (class inheritsFrom: TestCase) and: [ class isAbstract not ] ]
+				thenCollect: [ :testCase | testCase buildSuiteFromSelectors ] ].
+	result := (TestSuite named: aName , '-Testing')
+		addTests: suits;
+		run.
+	^ self transformResultIntoMap: result
+]
+
+{ #category : #tests }
 BaselineTest >> transformResultIntoMap: aREsult [
 	| map |
 	map := Dictionary new.
