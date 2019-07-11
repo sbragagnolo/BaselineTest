@@ -28,6 +28,32 @@ BaselineTestCase class >> testParameters [
 ]
 
 { #category : #accessing }
+BaselineTestCase >> allRemoteExecuteTestsClassNamed: aPackageName timeout: aTimeout [
+	| futures |
+	futures := self
+		privateAllBackendsCollect: (self privateTestingBlockForTestClassNamed: aPackageName).
+	self assert: futures isNotEmpty.
+	^ futures
+		collect: [ :f | 
+			[ f synchronizeTimeout: aTimeout ]
+				on: Error
+				do: [ :e | e ] ]
+]
+
+{ #category : #accessing }
+BaselineTestCase >> allRemoteExecuteTestsOnPackageNamed: aPackageName timeout: aTimeout [
+	| futures |
+	futures := self
+		privateAllBackendsCollect: (self privateTestingBlockForPackage: aPackageName).
+	self assert: futures isNotEmpty.
+	^ futures
+		collect: [ :f | 
+			[ f synchronizeTimeout: aTimeout ]
+				on: Error
+				do: [ :e | e ] ]
+]
+
+{ #category : #accessing }
 BaselineTestCase >> allRemotesAssert: aBlock [
 	^ self allRemotesAssert: aBlock timeout: self defaultTimeout
 ]
@@ -78,6 +104,22 @@ BaselineTestCase >> privateAllBackendsCollect: aBlock [
 ]
 
 { #category : #accessing }
+BaselineTestCase >> privateTestingBlockForPackage: aPackageName [
+	^ self class
+		evaluate:
+			('[ BaselineTest new testPackageNameStartingWith: ''{1}'' ]'
+				format: {aPackageName})
+]
+
+{ #category : #accessing }
+BaselineTestCase >> privateTestingBlockForTestClassNamed: aClassName [
+	^ self class
+		evaluate:
+			('[ BaselineTest new testClass: ''{1}'' asClass ]'
+				format: {aClassName})
+]
+
+{ #category : #accessing }
 BaselineTestCase >> project: aProject [
 	project := aProject
 ]
@@ -123,11 +165,8 @@ BaselineTestCase >> remoteAssert: aBlock timeout: aTimeout [
 { #category : #accessing }
 BaselineTestCase >> remoteExecuteTestsClassNamed: aClassName timeout: aTimeout [
 	^ (self
-		executeBlockAsArchetypedTask:
-			(self class
-				evaluate:
-					('[ BaselineTest new testClass: ''{1}'' asClass ]'
-						format: {aClassName}))) synchronizeTimeout: aTimeout
+		executeBlockAsArchetypedTask: (self privateTestingBlockForTestClassNamed: aClassName))
+		synchronizeTimeout: aTimeout
 ]
 
 { #category : #accessing }
@@ -140,11 +179,8 @@ BaselineTestCase >> remoteExecuteTestsOnPackageNamed: aPackageName [
 { #category : #accessing }
 BaselineTestCase >> remoteExecuteTestsOnPackageNamed: aPackageName timeout: aTimeout [
 	^ (self
-		executeBlockAsArchetypedTask:
-			(self class
-				evaluate:
-					('[ BaselineTest new testPackageNameStartingWith: ''{1}'' ]'
-						format: {aPackageName}))) synchronizeTimeout: aTimeout
+		executeBlockAsArchetypedTask: (self privateTestingBlockForPackage: aPackageName))
+		synchronizeTimeout: aTimeout
 ]
 
 { #category : #accessing }
