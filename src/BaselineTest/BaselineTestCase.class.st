@@ -9,6 +9,11 @@ Class {
 	#category : #BaselineTest
 }
 
+{ #category : #accessing }
+BaselineTestCase class >> isAbstract [
+	^ true
+]
+
 { #category : #'building suites' }
 BaselineTestCase class >> projectPerGroup [
 	^ self subclassResponsibility
