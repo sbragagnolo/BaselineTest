@@ -29,11 +29,9 @@ TKTTestRunnerHandler >> handle: aCollectionOfTestCases for: anArchetype updating
 		collect: [ :i | self workingOnArchetype: anArchetype ].
 	self halt."
 	[ stream atEnd ]
-		whileFalse: [ 
-			bkndsize := bkndsize + 1.
+		whileFalse: [ bkndsize := bkndsize + 1.
 			partition := (stream next: partitionSize) reject: #isNil.
 			backend := self workingOnArchetype: anArchetype.
-			self halt.
 			self
 				registerFuturesToGo:
 					(partition
@@ -51,8 +49,7 @@ TKTTestRunnerHandler >> handle: aCollectionOfTestCases for: anArchetype updating
 								onFailureDo:
 										[ :e | self noteMapIsError: future updating: aTKTTestRunner backend: backend ] ])
 				on: backend.
-			2 seconds wait.
-			self halt. ].
+			2 seconds wait ].
 	self logCr: ' splitted into ' , bkndsize asString , ' bkends'
 ]
 
