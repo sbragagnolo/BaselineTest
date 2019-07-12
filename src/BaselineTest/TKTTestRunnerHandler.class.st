@@ -24,7 +24,7 @@ TKTTestRunnerHandler >> handle: aCollectionOfTestCases for: anArchetype updating
 	stream := aCollectionOfTestCases readStream.
 	TKTConfiguration runner poolMaxSize: 10.
 	bkndsize := 0.
-	partitionSize := 300.
+	partitionSize := 700.
 	"	backends := (1 to: 5)
 		collect: [ :i | self workingOnArchetype: anArchetype ].
 	self halt."
