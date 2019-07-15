@@ -3,10 +3,37 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'pool',
-		'futures'
+		'futures',
+		'partitions'
 	],
 	#category : #BaselineTest
 }
+
+{ #category : #initialization }
+TKTTestRunnerHandler >> doPreparePartitions: aCollectionOfTestCases for: anArchetype [
+	| basicSize rest stream deploy |
+	deploy := anArchetype deploy.
+	partitions := OrderedCollection new: 10.
+	basicSize := aCollectionOfTestCases size // 10.
+	rest := aCollectionOfTestCases size \\ 10.
+	stream := aCollectionOfTestCases readStream.
+	
+	partitions
+		add:
+			(TKTTestPartition new
+				cases: (stream next: basicSize + rest);
+				backend: deploy clone;
+				yourself).
+	9
+		timesRepeat: [ partitions
+				add:
+					(TKTTestPartition new
+						cases: (stream next: basicSize);
+						backend: deploy clone;
+						yourself) ].
+	self assert: stream atEnd.
+	^ partitions.
+]
 
 { #category : #executing }
 TKTTestRunnerHandler >> futureForExecutingTestCase: aClass forcingBackend: aTKTForkedBackend [
@@ -20,37 +47,40 @@ TKTTestRunnerHandler >> futureForExecutingTestCase: aClass forcingBackend: aTKTF
 
 { #category : #initialization }
 TKTTestRunnerHandler >> handle: aCollectionOfTestCases for: anArchetype updating: aTKTTestRunner [
-	| backend stream partitionSize partition bkndsize backends |
-	stream := aCollectionOfTestCases readStream.
-	TKTConfiguration runner poolMaxSize: 10.
-	bkndsize := 0.
-	partitionSize := 700.
-	"	backends := (1 to: 5)
-		collect: [ :i | self workingOnArchetype: anArchetype ].
-	self halt."
-	[ stream atEnd ]
-		whileFalse: [ bkndsize := bkndsize + 1.
-			partition := (stream next: partitionSize) reject: #isNil.
-			backend := self workingOnArchetype: anArchetype.
-			self
+	| newPartitions |
+	partitions isEmptyOrNil
+		ifFalse: [ ^ self error: ' already working ' ].
+	TKTConfiguration runner poolMaxSize: 0.
+	newPartitions := self
+		doPreparePartitions: aCollectionOfTestCases
+		for: anArchetype.
+	newPartitions
+		do: [ :partition | 
+			partition
 				registerFuturesToGo:
-					(partition
+					(partition cases
 						collect: [ :c | 
 							| future |
 							future := self
 								futureForExecutingTestCase: c
-								forcingBackend: backend.
+								forcingBackend: partition backend.
 							future
 								onSuccessDo: [ :partialResult | 
 									self
 										noteMapIsFinished: future
 										updating: aTKTTestRunner
-										backend: backend ];
-								onFailureDo:
-										[ :e | self noteMapIsError: future updating: aTKTTestRunner backend: backend ] ])
-				on: backend.
+										partition: partition ];
+								onFailureDo: [ :e | 
+									self
+										noteMapIsError: future
+										updating: aTKTTestRunner
+										partition: partition ] ]).
 			2 seconds wait ].
-	self logCr: ' splitted into ' , bkndsize asString , ' bkends'
+	TKTConfiguration runner poolMaxSize: 10.
+	
+
+
+
 ]
 
 { #category : #resulting }
@@ -59,37 +89,26 @@ TKTTestRunnerHandler >> handleRemoteError: e [
 ]
 
 { #category : #resulting }
-TKTTestRunnerHandler >> noteFinishedFuture: aFuture backend: aBackend [
-	| association |
-	association := futures associations
-		detect: [ :a | a value includes: aFuture ].
-	association value remove: aFuture.
-	association value isEmpty
-		ifTrue: [ association key stopAndDelete.
-			futures removeKey: association key ]
-]
-
-{ #category : #resulting }
-TKTTestRunnerHandler >> noteMapIsError: aFuture updating: aTKTTestRunner backend: aBackend [
-	self noteFinishedFuture: aFuture backend: aBackend.
+TKTTestRunnerHandler >> noteMapIsError: aFuture updating: aTKTTestRunner partition: aPartition [
+	aPartition noteFinishedFuture: aFuture.
 	[ aFuture synchronizeTimeout: 1 second ]
 		on: Error
 		do: [ :e | self handleRemoteError: e ]
 ]
 
 { #category : #resulting }
-TKTTestRunnerHandler >> noteMapIsFinished: aFuture updating: aTKTTestRunner backend: aBackend [
-	self noteFinishedFuture: aFuture backend: aBackend.
+TKTTestRunnerHandler >> noteMapIsFinished: aFuture updating: aTKTTestRunner partition: aPartition [
+	aPartition noteFinishedFuture: aFuture.
 	aTKTTestRunner
 		informTestHasFinished: (aFuture synchronizeTimeout: 1 second)
 ]
 
 { #category : #initialization }
-TKTTestRunnerHandler >> registerFuturesToGo: someFutures on: backend [
+TKTTestRunnerHandler >> registerFuturesToGo: someFutures on: partition [
 	futures
-		at: backend
+		at: partition
 		ifPresent: [ :b | b addAll: someFutures ]
-		ifAbsent: [ futures at: backend put: someFutures asOrderedCollection ]
+		ifAbsent: [ futures at: partition put: someFutures asOrderedCollection ]
 ]
 
 { #category : #initialization }
@@ -100,6 +119,7 @@ TKTTestRunnerHandler >> setUp [
 
 { #category : #initialization }
 TKTTestRunnerHandler >> tearDown [
+	self halt.
 	pool stopAndDelete
 ]
 
