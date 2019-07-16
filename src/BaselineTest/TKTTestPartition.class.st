@@ -10,6 +10,11 @@ Class {
 }
 
 { #category : #accessing }
+TKTTestPartition >> backend [
+	^ backend
+]
+
+{ #category : #accessing }
 TKTTestPartition >> backend: aBackend [
 	backend := aBackend 
 ]

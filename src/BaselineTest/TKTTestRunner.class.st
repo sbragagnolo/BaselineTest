@@ -69,7 +69,9 @@ TKTTestRunner >> runSelectedClassesInArchetype: aTKTArchetype [
 		tryToExecute: [ self runningHandler
 				handle:
 					(classesSelected asOrderedCollection
-						reject: [ :c | c isAbstract or: [ c isVariable ] ])
+						reject: [ :c | 
+							(c isAbstract or: [ c isVariable ])
+								or: [ c package name beginsWith: 'TaskIt' ] ])
 				for: aTKTArchetype
 				updating: self ]
 ]

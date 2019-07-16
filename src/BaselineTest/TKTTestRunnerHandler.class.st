@@ -3,7 +3,6 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'pool',
-		'futures',
 		'partitions'
 	],
 	#category : #BaselineTest
@@ -11,28 +10,28 @@ Class {
 
 { #category : #initialization }
 TKTTestRunnerHandler >> doPreparePartitions: aCollectionOfTestCases for: anArchetype [
-	| basicSize rest stream deploy |
+	| basicSize rest stream deploy amount |
 	deploy := anArchetype deploy.
-	partitions := OrderedCollection new: 10.
-	basicSize := aCollectionOfTestCases size // 10.
-	rest := aCollectionOfTestCases size \\ 10.
+	amount := 10.
+	partitions := OrderedCollection new: amount.
+	basicSize := aCollectionOfTestCases size // amount.
+	rest := aCollectionOfTestCases size \\ amount.
 	stream := aCollectionOfTestCases readStream.
-	
 	partitions
 		add:
 			(TKTTestPartition new
 				cases: (stream next: basicSize + rest);
-				backend: deploy clone;
+				backend: (self workingOnArchetype: deploy clone);
 				yourself).
-	9
+	amount - 1
 		timesRepeat: [ partitions
 				add:
 					(TKTTestPartition new
 						cases: (stream next: basicSize);
-						backend: deploy clone;
+						backend: (self workingOnArchetype: deploy clone);
 						yourself) ].
 	self assert: stream atEnd.
-	^ partitions.
+	^ partitions
 ]
 
 { #category : #executing }
@@ -46,41 +45,52 @@ TKTTestRunnerHandler >> futureForExecutingTestCase: aClass forcingBackend: aTKTF
 ]
 
 { #category : #initialization }
+TKTTestRunnerHandler >> futureForExecutingTestCases: aCollectionOfCases forcingBackend: aBackend [
+	| block |
+	block := self class
+		evaluate:
+			('
+		[ 	| suit cases |
+			cases := {1} collect: [ : classSymbol | classSymbol asClass buildSuiteFromSelectors ].
+			suit := TestSuite named: ''ForkedSuit''. 
+			suit addTests: cases.
+			suit run. ]'
+				format: {(aCollectionOfCases collect: [ :c | c name asSymbol ]) asArray}).
+	^ pool
+		futureArchetypedTask: (block asArchetypedTaskOn: aBackend archetype)
+		backend: aBackend
+]
+
+{ #category : #initialization }
 TKTTestRunnerHandler >> handle: aCollectionOfTestCases for: anArchetype updating: aTKTTestRunner [
 	| newPartitions |
 	partitions isEmptyOrNil
 		ifFalse: [ ^ self error: ' already working ' ].
-	TKTConfiguration runner poolMaxSize: 0.
+	TKTConfiguration runner poolMaxSize: 2.
 	newPartitions := self
 		doPreparePartitions: aCollectionOfTestCases
 		for: anArchetype.
+	TKTConfiguration runner poolMaxSize: 0.
 	newPartitions
 		do: [ :partition | 
-			partition
-				registerFuturesToGo:
-					(partition cases
-						collect: [ :c | 
-							| future |
-							future := self
-								futureForExecutingTestCase: c
-								forcingBackend: partition backend.
-							future
-								onSuccessDo: [ :partialResult | 
-									self
-										noteMapIsFinished: future
-										updating: aTKTTestRunner
-										partition: partition ];
-								onFailureDo: [ :e | 
-									self
-										noteMapIsError: future
-										updating: aTKTTestRunner
-										partition: partition ] ]).
+			| future |
+			future := self
+				futureForExecutingTestCases: partition cases
+				forcingBackend: partition backend.
+			future
+				onSuccessDo: [ :partialResult | 
+					self
+						noteMapIsFinished: future
+						updating: aTKTTestRunner
+						partition: partition ];
+				onFailureDo: [ :e | 
+					self
+						noteMapIsError: future
+						updating: aTKTTestRunner
+						partition: partition ].
+			partition registerFuturesToGo: {future}.
 			2 seconds wait ].
-	TKTConfiguration runner poolMaxSize: 10.
-	
-
-
-
+	TKTConfiguration runner poolMaxSize: 10
 ]
 
 { #category : #resulting }
@@ -104,17 +114,9 @@ TKTTestRunnerHandler >> noteMapIsFinished: aFuture updating: aTKTTestRunner part
 ]
 
 { #category : #initialization }
-TKTTestRunnerHandler >> registerFuturesToGo: someFutures on: partition [
-	futures
-		at: partition
-		ifPresent: [ :b | b addAll: someFutures ]
-		ifAbsent: [ futures at: partition put: someFutures asOrderedCollection ]
-]
-
-{ #category : #initialization }
 TKTTestRunnerHandler >> setUp [
 	pool := TKTArchetypeAwarePool createDefaultWithPool: TKTConfiguration runner .
-	futures := Dictionary new.
+	
 ]
 
 { #category : #initialization }
