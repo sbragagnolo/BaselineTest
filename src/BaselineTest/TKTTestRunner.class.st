@@ -65,6 +65,7 @@ TKTTestRunner >> noteFinishedScheduling: future [
 
 { #category : #'forked running' }
 TKTTestRunner >> runSelectedClassesInArchetype: aTKTArchetype [
+	self resetResult.
 	^ self
 		tryToExecute: [ self runningHandler
 				handle:

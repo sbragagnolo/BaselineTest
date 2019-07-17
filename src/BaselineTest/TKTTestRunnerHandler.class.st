@@ -12,7 +12,7 @@ Class {
 TKTTestRunnerHandler >> doPreparePartitions: aCollectionOfTestCases for: anArchetype [
 	| basicSize rest stream deploy amount |
 	deploy := anArchetype deploy.
-	amount := 10.
+	amount := 4.
 	partitions := OrderedCollection new: amount.
 	basicSize := aCollectionOfTestCases size // amount.
 	rest := aCollectionOfTestCases size \\ amount.
@@ -54,7 +54,7 @@ TKTTestRunnerHandler >> futureForExecutingTestCases: aCollectionOfCases forcingB
 			cases := {1} collect: [ : classSymbol | classSymbol asClass buildSuiteFromSelectors ].
 			suit := TestSuite named: ''ForkedSuit''. 
 			suit addTests: cases.
-			suit run. ]'
+			[suit run.] on: Exception do: [: e | e resume  ] .].'
 				format: {(aCollectionOfCases collect: [ :c | c name asSymbol ]) asArray}).
 	^ pool
 		futureArchetypedTask: (block asArchetypedTaskOn: aBackend archetype)
@@ -64,8 +64,6 @@ TKTTestRunnerHandler >> futureForExecutingTestCases: aCollectionOfCases forcingB
 { #category : #initialization }
 TKTTestRunnerHandler >> handle: aCollectionOfTestCases for: anArchetype updating: aTKTTestRunner [
 	| newPartitions |
-	partitions isEmptyOrNil
-		ifFalse: [ ^ self error: ' already working ' ].
 	TKTConfiguration runner poolMaxSize: 2.
 	newPartitions := self
 		doPreparePartitions: aCollectionOfTestCases
