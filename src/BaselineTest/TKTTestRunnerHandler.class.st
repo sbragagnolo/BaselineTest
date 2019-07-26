@@ -39,12 +39,15 @@ TKTTestRunnerHandler >> futureForExecutingTestCases: aCollectionOfCases archetyp
 	block := self class
 		evaluate:
 			('
-		[ 	| suit cases |
-			cases := {1} collect: [ : classSymbol | classSymbol asClass buildSuiteFromSelectors ].
-			suit := TestSuite named: ''ForkedSuit''. 
-			suit addTests: cases.
-			[suit run.] on: Exception do: [: e | e resume  ] .].'
+		[ |  result errors  |
+		1 halt.
+	errors := OrderedCollection new. 
+	result := TestResult new .
+	{1} do: [ : classSymbol |  [ result registerPartialResult: classSymbol asClass buildSuiteFromSelectors run ] on: Error do: [ : e | errors add:\{classSymbol . e messageText \} .e resume ] ].	
+	\{ result . errors \}]
+			'
 				format: {(aCollectionOfCases collect: [ :c | c name asSymbol ]) asArray}).
+				
 	^ (block asArchetypedTaskOn: archetype) future: pool
 ]
 

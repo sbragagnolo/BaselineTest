@@ -53,9 +53,14 @@ TKTTestRunner >> handleError: anError [
 
 { #category : #updating }
 TKTTestRunner >> informTestHasFinished: aTestResult [
-	result registerPartialResult: aTestResult.
+	| errors partials | 
+	partials := aTestResult first.
+	errors := aTestResult second.
+	
+	result registerPartialResult: partials.
 	self updateResults.
-	self saveResultInHistory
+	self saveResultInHistory.
+	errors ifNotEmpty: [ self halt ]
 ]
 
 { #category : #'forked running' }
