@@ -92,7 +92,6 @@ TKTTestRunner >> runningHandler [
 { #category : #'forked running' }
 TKTTestRunner >> tryToExecute: aBlock [
 	aBlock value.
-	self halt.
 		"
 	ongoing
 		ifNotNil: [ ongoing isFinished

@@ -33,47 +33,8 @@ BaselineTestCase class >> testParameters [
 ]
 
 { #category : #accessing }
-BaselineTestCase >> allRemoteExecuteTestsClassNamed: aPackageName timeout: aTimeout [
-	| futures |
-	futures := self
-		privateAllBackendsCollect: (self privateTestingBlockForTestClassNamed: aPackageName).
-	self assert: futures isNotEmpty.
-	^ futures
-		collect: [ :f | 
-			[ f synchronizeTimeout: aTimeout ]
-				on: Error
-				do: [ :e | e ] ]
-]
-
-{ #category : #accessing }
-BaselineTestCase >> allRemoteExecuteTestsOnPackageNamed: aPackageName timeout: aTimeout [
-	| futures |
-	futures := self
-		privateAllBackendsCollect: (self privateTestingBlockForPackage: aPackageName).
-	self assert: futures isNotEmpty.
-	^ futures
-		collect: [ :f | 
-			[ f synchronizeTimeout: aTimeout ]
-				on: Error
-				do: [ :e | e ] ]
-]
-
-{ #category : #accessing }
 BaselineTestCase >> allRemotesAssert: aBlock [
 	^ self allRemotesAssert: aBlock timeout: self defaultTimeout
-]
-
-{ #category : #accessing }
-BaselineTestCase >> allRemotesAssert: aBlock timeout: aTimeout [
-	| futures |
-	futures := self privateAllBackendsCollect: aBlock.
-	self assert: futures isNotEmpty.
-	futures
-		do: [ :f | 
-			[ f synchronizeTimeout: aTimeout ]
-				on: Error
-				do: [ :e | e ] ].
-	futures do: [ :f | self assert: (f synchronizeTimeout: aTimeout) ]
 ]
 
 { #category : #accessing }
@@ -101,11 +62,6 @@ BaselineTestCase >> initializePool [
 	pool := BaselineTestPoolResource current pool.
 	self amountBackendsToUse - (pool backendsFor: archetype) size
 		timesRepeat: [ pool spawnNewBackendFor: archetype ]
-]
-
-{ #category : #accessing }
-BaselineTestCase >> privateAllBackendsCollect: aBlock [
-	^ pool allBackendsCollect: (aBlock asArchetypedTaskOn: archetype)
 ]
 
 { #category : #accessing }

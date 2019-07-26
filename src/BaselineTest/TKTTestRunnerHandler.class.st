@@ -10,8 +10,7 @@ Class {
 
 { #category : #initialization }
 TKTTestRunnerHandler >> doPreparePartitions: aCollectionOfTestCases for: anArchetype [
-	| basicSize rest stream deploy amount |
-	deploy := anArchetype deploy.
+	| basicSize rest stream amount |
 	amount := 4.
 	partitions := OrderedCollection new: amount.
 	basicSize := aCollectionOfTestCases size // amount.
@@ -21,31 +20,21 @@ TKTTestRunnerHandler >> doPreparePartitions: aCollectionOfTestCases for: anArche
 		add:
 			(TKTTestPartition new
 				cases: (stream next: basicSize + rest);
-				backend: (self workingOnArchetype: deploy clone);
+				archetype: anArchetype;
 				yourself).
 	amount - 1
 		timesRepeat: [ partitions
 				add:
 					(TKTTestPartition new
 						cases: (stream next: basicSize);
-						backend: (self workingOnArchetype: deploy clone);
+						archetype: anArchetype;
 						yourself) ].
 	self assert: stream atEnd.
 	^ partitions
 ]
 
-{ #category : #executing }
-TKTTestRunnerHandler >> futureForExecutingTestCase: aClass forcingBackend: aTKTForkedBackend [
-	| block |
-	block := self class
-		evaluate: ('[ ''{1}'' asClass buildSuiteFromSelectors run ]' format: {aClass}).
-	^ pool
-		futureArchetypedTask: (block asArchetypedTaskOn: aTKTForkedBackend archetype)
-		backend: aTKTForkedBackend
-]
-
 { #category : #initialization }
-TKTTestRunnerHandler >> futureForExecutingTestCases: aCollectionOfCases forcingBackend: aBackend [
+TKTTestRunnerHandler >> futureForExecutingTestCases: aCollectionOfCases archetype: archetype [
 	| block |
 	block := self class
 		evaluate:
@@ -56,25 +45,21 @@ TKTTestRunnerHandler >> futureForExecutingTestCases: aCollectionOfCases forcingB
 			suit addTests: cases.
 			[suit run.] on: Exception do: [: e | e resume  ] .].'
 				format: {(aCollectionOfCases collect: [ :c | c name asSymbol ]) asArray}).
-	^ pool
-		futureArchetypedTask: (block asArchetypedTaskOn: aBackend archetype)
-		backend: aBackend
+	^ (block asArchetypedTaskOn: archetype) future: pool
 ]
 
 { #category : #initialization }
 TKTTestRunnerHandler >> handle: aCollectionOfTestCases for: anArchetype updating: aTKTTestRunner [
 	| newPartitions |
-	TKTConfiguration runner poolMaxSize: 2.
 	newPartitions := self
 		doPreparePartitions: aCollectionOfTestCases
 		for: anArchetype.
-	TKTConfiguration runner poolMaxSize: 0.
 	newPartitions
 		do: [ :partition | 
 			| future |
 			future := self
 				futureForExecutingTestCases: partition cases
-				forcingBackend: partition backend.
+				archetype: partition archetype. 
 			future
 				onSuccessDo: [ :partialResult | 
 					self
@@ -88,7 +73,7 @@ TKTTestRunnerHandler >> handle: aCollectionOfTestCases for: anArchetype updating
 						partition: partition ].
 			partition registerFuturesToGo: {future}.
 			2 seconds wait ].
-	TKTConfiguration runner poolMaxSize: 10
+
 ]
 
 { #category : #resulting }
@@ -121,9 +106,4 @@ TKTTestRunnerHandler >> setUp [
 TKTTestRunnerHandler >> tearDown [
 	self halt.
 	pool stopAndDelete
-]
-
-{ #category : #convenience }
-TKTTestRunnerHandler >> workingOnArchetype: aTKTArchetype [
-	^ pool spawnNewBackendFor: aTKTArchetype
 ]

@@ -4,10 +4,22 @@ Class {
 	#instVars : [
 		'cases',
 		'backend',
-		'futures'
+		'futures',
+		'archetype',
+		'finished'
 	],
 	#category : #BaselineTest
 }
+
+{ #category : #avccessing }
+TKTTestPartition >> archetype [
+	^ archetype
+]
+
+{ #category : #accessing }
+TKTTestPartition >> archetype: aTKTArchetype [ 
+	archetype := aTKTArchetype 
+]
 
 { #category : #accessing }
 TKTTestPartition >> backend [
@@ -38,7 +50,12 @@ TKTTestPartition >> futures: aCollection [
 TKTTestPartition >> noteFinishedFuture: aFuture [
 	self assert: (futures includes: aFuture).
 	(futures allSatisfy: #isFinished)
-		ifTrue: [ backend stopAndDelete ]
+		ifTrue: [ self noteHasFinished ]
+]
+
+{ #category : #accessing }
+TKTTestPartition >> noteHasFinished [
+	finished:= true.
 ]
 
 { #category : #accessing }
