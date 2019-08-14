@@ -11,7 +11,7 @@ Class {
 { #category : #initialization }
 TKTTestRunnerHandler >> doPreparePartitions: aCollectionOfTestCases for: anArchetype [
 	| basicSize rest stream amount |
-	amount := 4.
+	amount := 5.
 	partitions := OrderedCollection new: amount.
 	basicSize := aCollectionOfTestCases size // amount.
 	rest := aCollectionOfTestCases size \\ amount.
@@ -40,7 +40,6 @@ TKTTestRunnerHandler >> futureForExecutingTestCases: aCollectionOfCases archetyp
 		evaluate:
 			('
 		[ |  result errors  |
-		1 halt.
 	errors := OrderedCollection new. 
 	result := TestResult new .
 	{1} do: [ : classSymbol |  [ result registerPartialResult: classSymbol asClass buildSuiteFromSelectors run ] on: Error do: [ : e | errors add:\{classSymbol . e messageText \} .e resume ] ].	
