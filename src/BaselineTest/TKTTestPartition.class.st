@@ -6,7 +6,8 @@ Class {
 		'backend',
 		'futures',
 		'archetype',
-		'finished'
+		'finished',
+		'testsSize'
 	],
 	#category : #BaselineTest
 }
@@ -47,6 +48,11 @@ TKTTestPartition >> futures: aCollection [
 ]
 
 { #category : #accessing }
+TKTTestPartition >> hasFinished [
+	^ finished ifNil: [ ^ false ]
+]
+
+{ #category : #accessing }
 TKTTestPartition >> noteFinishedFuture: aFuture [
 	self assert: (futures includes: aFuture).
 	(futures allSatisfy: #isFinished)
@@ -59,6 +65,23 @@ TKTTestPartition >> noteHasFinished [
 ]
 
 { #category : #accessing }
+TKTTestPartition >> printOn: aStream [
+	('Partition(Size: {1} Finished: {2})'
+		format:
+			{self testsSize asString.
+			self hasFinished asString}) printOn: aStream
+]
+
+{ #category : #accessing }
 TKTTestPartition >> registerFuturesToGo: aCollection [
 	self futures: aCollection 
+]
+
+{ #category : #accessing }
+TKTTestPartition >> testsSize [
+	testsSize
+		ifNil: [ testsSize := (cases collect: #buildSuiteFromSelectors)
+				inject: 0
+				into: [ :acc :t | acc + t tests size ] ].
+	^ testsSize
 ]

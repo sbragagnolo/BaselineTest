@@ -3,7 +3,8 @@ Class {
 	#superclass : #TestRunner,
 	#instVars : [
 		'runningHandler',
-		'ongoing'
+		'ongoing',
+		'started'
 	],
 	#category : #BaselineTest
 }
@@ -64,12 +65,19 @@ TKTTestRunner >> informTestHasFinished: aTestResult [
 ]
 
 { #category : #'forked running' }
+TKTTestRunner >> noteAllHasFinished [
+	duration := started - DateAndTime now.
+	self halt: duration asString
+]
+
+{ #category : #'forked running' }
 TKTTestRunner >> noteFinishedScheduling: future [
 
 ]
 
 { #category : #'forked running' }
 TKTTestRunner >> runSelectedClassesInArchetype: aTKTArchetype [
+	started := DateAndTime now.
 	self resetResult.
 	^ self
 		tryToExecute: [ self runningHandler

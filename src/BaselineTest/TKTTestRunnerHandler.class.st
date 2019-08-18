@@ -11,10 +11,14 @@ Class {
 { #category : #initialization }
 TKTTestRunnerHandler >> doPreparePartitions: aCollectionOfTestCases for: anArchetype [
 	| basicSize rest stream amount |
-	amount := 5.
+	amount := 20.
 	partitions := OrderedCollection new: amount.
 	basicSize := aCollectionOfTestCases size // amount.
 	rest := aCollectionOfTestCases size \\ amount.
+	partitions inspect.
+	self
+		inform: ' Scheduling Test cases: ' , aCollectionOfTestCases size asString.
+	self inform: ' Scheduling Batch size: ' , basicSize asString.
 	stream := aCollectionOfTestCases readStream.
 	partitions
 		add:
@@ -95,7 +99,9 @@ TKTTestRunnerHandler >> noteMapIsError: aFuture updating: aTKTTestRunner partiti
 TKTTestRunnerHandler >> noteMapIsFinished: aFuture updating: aTKTTestRunner partition: aPartition [
 	aPartition noteFinishedFuture: aFuture.
 	aTKTTestRunner
-		informTestHasFinished: (aFuture synchronizeTimeout: 1 second)
+		informTestHasFinished: (aFuture synchronizeTimeout: 1 second).
+	(partitions allSatisfy: #hasFinished)
+		ifTrue: [ aTKTTestRunner noteAllHasFinished ]
 ]
 
 { #category : #initialization }
