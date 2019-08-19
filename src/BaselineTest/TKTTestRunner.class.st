@@ -66,8 +66,10 @@ TKTTestRunner >> informTestHasFinished: aTestResult [
 
 { #category : #'forked running' }
 TKTTestRunner >> noteAllHasFinished [
+	| duration |
 	duration := started - DateAndTime now.
-	self halt: duration asString
+	self halt: duration asString.
+	runningHandler tearDown.
 ]
 
 { #category : #'forked running' }

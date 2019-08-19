@@ -112,6 +112,5 @@ TKTTestRunnerHandler >> setUp [
 
 { #category : #initialization }
 TKTTestRunnerHandler >> tearDown [
-	self halt.
 	pool stopAndDelete
 ]
