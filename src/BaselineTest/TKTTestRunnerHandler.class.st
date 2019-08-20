@@ -11,13 +11,17 @@ Class {
 { #category : #initialization }
 TKTTestRunnerHandler >> doPreparePartitions: aCollectionOfTestCases for: anArchetype [
 	| basicSize rest stream amount |
-	amount := 20.
+	amount := 100.
+	
+	
 	partitions := OrderedCollection new: amount.
 	basicSize := aCollectionOfTestCases size // amount.
 	rest := aCollectionOfTestCases size \\ amount.
 	partitions inspect.
-	self
-		inform: ' Scheduling Test cases: ' , aCollectionOfTestCases size asString.
+	
+	
+	
+	self inform: ' Scheduling Test cases: ' , aCollectionOfTestCases size asString.
 	self inform: ' Scheduling Batch size: ' , basicSize asString.
 	stream := aCollectionOfTestCases readStream.
 	partitions
@@ -38,34 +42,43 @@ TKTTestRunnerHandler >> doPreparePartitions: aCollectionOfTestCases for: anArche
 ]
 
 { #category : #initialization }
-TKTTestRunnerHandler >> futureForExecutingTestCases: aCollectionOfCases archetype: archetype [
-	| block |
-	block := self class
-		evaluate:
-			('
-		[ |  result errors  |
+TKTTestRunnerHandler >> futureForExecutingTestCases: aGroupOfTestCases archetype: archetype [
+	| block code suites |
+	suites := aGroupOfTestCases keys
+		collect: [ :aClass | 
+			' {1} do: [ : testSelector | suite addTest: ({2} selector: testSelector) ].'
+				format:
+					{(aGroupOfTestCases at: aClass) asArray.
+					aClass name} ].
+	code := '
+		[ |  result errors  suite |
 	errors := OrderedCollection new. 
-	result := TestResult new .
-	{1} do: [ : classSymbol |  [ result registerPartialResult: classSymbol asClass buildSuiteFromSelectors run ] on: Error do: [ : e | errors add:\{classSymbol . e messageText \} .e resume ] ].	
-	\{ result . errors \}]
-			'
-				format: {(aCollectionOfCases collect: [ :c | c name asSymbol ]) asArray}).
-				
-	^ (block asArchetypedTaskOn: archetype) future: pool
+	result := TestResult new.
+	suite := TestSuite new.
+	{1}.
+	{2}]'
+		format:
+			{(OSPlatform current lineEnding join: suites).
+			'[ result registerPartialResult: suite run ] on: Error do: [ : e | errors add:{  e messageText } .e resume ]'.
+			'{ result . errors }]'}.
+	block := self class evaluate: code.
+	^ (block asArchetypedTaskOn: archetype) future: self pool
 ]
 
 { #category : #initialization }
-TKTTestRunnerHandler >> handle: aCollectionOfTestCases for: anArchetype updating: aTKTTestRunner [
-	| newPartitions |
+TKTTestRunnerHandler >> handle: aCollectionOfTests for: anArchetype updating: aTKTTestRunner [
+	| newPartitions testsCases |
+	testsCases := aCollectionOfTests
+		flatCollect: [ :class | class allTestSelectors collect: [ :s | class -> s ] ].
 	newPartitions := self
-		doPreparePartitions: aCollectionOfTestCases
+		doPreparePartitions: testsCases
 		for: anArchetype.
 	newPartitions
 		do: [ :partition | 
 			| future |
 			future := self
 				futureForExecutingTestCases: partition cases
-				archetype: partition archetype. 
+				archetype: partition archetype.
 			future
 				onSuccessDo: [ :partialResult | 
 					self
@@ -77,9 +90,7 @@ TKTTestRunnerHandler >> handle: aCollectionOfTestCases for: anArchetype updating
 						noteMapIsError: future
 						updating: aTKTTestRunner
 						partition: partition ].
-			partition registerFuturesToGo: {future}.
-			2 seconds wait ].
-
+			partition registerFuturesToGo: {future} ]
 ]
 
 { #category : #resulting }
@@ -102,6 +113,13 @@ TKTTestRunnerHandler >> noteMapIsFinished: aFuture updating: aTKTTestRunner part
 		informTestHasFinished: (aFuture synchronizeTimeout: 1 second).
 	(partitions allSatisfy: #hasFinished)
 		ifTrue: [ aTKTTestRunner noteAllHasFinished ]
+]
+
+{ #category : #initialization }
+TKTTestRunnerHandler >> pool [
+	^ pool
+		ifNil: [ self setUp.
+			pool ]
 ]
 
 { #category : #initialization }
