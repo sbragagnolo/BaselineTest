@@ -11,7 +11,7 @@ Class {
 { #category : #initialization }
 TKTTestRunnerHandler >> doPreparePartitions: aCollectionOfTestCases for: anArchetype [
 	| basicSize rest stream amount |
-	amount := 100.
+	amount := 15.
 	
 	
 	partitions := OrderedCollection new: amount.
