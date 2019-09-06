@@ -15,5 +15,5 @@ BaselineOfBaselineTest >> baseline: spec [
 BaselineOfBaselineTest >> forkit: spec [
 	spec
 		baseline: 'ForkIt'
-		with: [ spec repository: 'github://sbragagnolo/taskit:ForkIt' ]
+		with: [ spec repository: 'github://sbragagnolo/taskit' ]
 ]
